@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>KMLA Campus Info</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Panellum CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum/build/pannellum.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/pannellum/build/pannellum.js"></script>
+
+  <style>
+    body { margin: 0; padding: 0; }
+    #map, #panorama { width: 100%; height: 100vh; }
+
+    #map {
+      cursor: crosshair;
+    }
+
+    #backButton { 
+      position: absolute; 
+      top: 20px; 
+      left: 50px; 
+      z-index: 1000; 
+      font-size: 30px; /* 폰트 크기 증가 */
+      padding: 20px 30px; /* 버튼 패딩 증가 */
+      background-color: #1E90FF; /* 눈에 띄는 파란색 */
+      color: white; 
+      border: none; 
+      border-radius: 12px; /* 버튼의 둥글기 증가 */
+      cursor: pointer; 
+    } 
+    #backButton:hover {
+      background-color: #FFD700; /* 눈에 띄는 노란색 */
+      color: black; /* 호버 시 글자색을 검정으로 변경 */
+    }
+    
+    #imageTitle {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      font-size: 24px;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    }
+    
+    .arrowButton {
+      position: absolute;
+      bottom: 30px;
+      z-index: 1001;
+      font-size: 90px;
+      background-color: rgba(0, 123, 255, 0.7);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 150px;
+      height: 150px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #upArrow {
+      left: 50%;
+      bottom: 200px;
+      transform: translateX(-50%);
+    }
+    #downArrow {
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+    }
+    .arrowButton:hover {
+      background-color: rgba(0, 86, 179, 0.9);
+    }
+  </style>
+
+</head>
+<body>
+
+  <div id="map"></div>
+  <div id="panorama" style="display: none; position: relative;">
+    <button id="upArrow" class="arrowButton" onclick="navigateToNext()">▲</button>
+    <button id="downArrow" class="arrowButton" onclick="navigateToPrevious()">▼</button>
+  </div>
+  <div id="imageTitle" style="display: none;"></div>
+
+  <button id="backButton" style="display: none;" onclick="showMap()">지도로 돌아가기</button>
+
+  <script>
+    var map = L.map('map').setView([37.459800, 128.143900], 17);
+    L.tileLayer("http://mt0.google.com/vt/lyrs=y&x={x}&y={y}&z={z}").addTo(map); 
+
+    // 독립적인 5개 점을 제외한 도로 구간 좌표
+    var roadCoordinates = [
+    [37.4625, 128.142028],
+    [37.462389, 128.142028],
+    [37.462278, 128.141944],
+    [37.462139, 128.141833],
+    [37.462, 128.141722],
+    [37.461889, 128.141639],
+    [37.46175, 128.141556],
+    [37.461639, 128.141417],
+    [37.461528, 128.141306],
+    [37.461361, 128.141278],
+    [37.461222, 128.141222],
+    [37.461083, 128.141194],
+    [37.460944, 128.141167],
+    [37.460778, 128.141167],
+    [37.460639, 128.141139],
+    [37.460472, 128.141111],
+    [37.460333, 128.141083],
+    [37.460194, 128.141139],
+    [37.460111, 128.14125],
+    [37.459972, 128.141361],
+    [37.459861, 128.141472],
+    [37.459778, 128.141611],
+    [37.459694, 128.141778],
+    [37.459611, 128.141944],
+    [37.459556, 128.142111],
+    [37.4595, 128.142306],
+    [37.459444, 128.142472],
+    [37.459389, 128.142667],
+    [37.459333, 128.142833],
+    [37.459278, 128.143028],
+    [37.459222, 128.143194],
+    [37.459194, 128.143389],
+    [37.459167, 128.143583],
+    [37.459111, 128.143778],
+    [37.459056, 128.143972],
+    [37.459028, 128.144167],
+    [37.459, 128.144333],
+    ];
+
+    var roadLine = L.polyline(roadCoordinates, {color: 'orange'}).addTo(map);
+
+    var imageData = [
+    { location: L.latLng(37.459671, 128.14343), imageUrl: './image/kmla_004.jpg' },
+
+    { location: L.latLng(37.4625, 128.142028), imageUrl: './image/kmla_013.jpg' },
+    { location: L.latLng(37.462389, 128.142028), imageUrl: './image/kmla_014.jpg' },
+    { location: L.latLng(37.462278, 128.141944), imageUrl: './image/kmla_015.jpg' },
+    { location: L.latLng(37.462139, 128.141833), imageUrl: './image/kmla_016.jpg' },
+    { location: L.latLng(37.462, 128.141722), imageUrl: './image/kmla_017.jpg' },
+    { location: L.latLng(37.461889, 128.141639), imageUrl: './image/kmla_018.jpg' },
+    { location: L.latLng(37.46175, 128.141556), imageUrl: './image/kmla_019.jpg' },
+    { location: L.latLng(37.461639, 128.141417), imageUrl: './image/kmla_020.jpg' },
+    { location: L.latLng(37.461528, 128.141306), imageUrl: './image/kmla_021.jpg' },
+    { location: L.latLng(37.461361, 128.141278), imageUrl: './image/kmla_022.jpg' },
+    { location: L.latLng(37.461222, 128.141222), imageUrl: './image/kmla_023.jpg' },
+    { location: L.latLng(37.461083, 128.141194), imageUrl: './image/kmla_024.jpg' },
+    { location: L.latLng(37.460944, 128.141167), imageUrl: './image/kmla_025.jpg' },
+    { location: L.latLng(37.460778, 128.141167), imageUrl: './image/kmla_026.jpg' },
+    { location: L.latLng(37.460639, 128.141139), imageUrl: './image/kmla_027.jpg' },
+    { location: L.latLng(37.460472, 128.141111), imageUrl: './image/kmla_028.jpg' },
+    { location: L.latLng(37.460333, 128.141083), imageUrl: './image/kmla_029.jpg' },
+    { location: L.latLng(37.460194, 128.141139), imageUrl: './image/kmla_030.jpg' },
+    { location: L.latLng(37.460111, 128.14125), imageUrl: './image/kmla_031.jpg' },
+    { location: L.latLng(37.459972, 128.141361), imageUrl: './image/kmla_032.jpg' },
+    { location: L.latLng(37.459861, 128.141472), imageUrl: './image/kmla_033.jpg' },
+    { location: L.latLng(37.459778, 128.141611), imageUrl: './image/kmla_034.jpg' },
+    { location: L.latLng(37.459694, 128.141778), imageUrl: './image/kmla_035.jpg' },
+    { location: L.latLng(37.459611, 128.141944), imageUrl: './image/kmla_036.jpg' },
+    { location: L.latLng(37.459556, 128.142111), imageUrl: './image/kmla_037.jpg' },
+    { location: L.latLng(37.4595, 128.142306), imageUrl: './image/kmla_038.jpg' },
+    { location: L.latLng(37.459444, 128.142472), imageUrl: './image/kmla_039.jpg' },
+    { location: L.latLng(37.459389, 128.142667), imageUrl: './image/kmla_040.jpg' },
+    { location: L.latLng(37.459333, 128.142833), imageUrl: './image/kmla_041.jpg' },
+    { location: L.latLng(37.459278, 128.143028), imageUrl: './image/kmla_042.jpg' },
+    { location: L.latLng(37.459222, 128.143194), imageUrl: './image/kmla_043.jpg' },
+    { location: L.latLng(37.459194, 128.143389), imageUrl: './image/kmla_044.jpg' },
+    { location: L.latLng(37.459167, 128.143583), imageUrl: './image/kmla_045.jpg' },
+    { location: L.latLng(37.459111, 128.143778), imageUrl: './image/kmla_046.jpg' },
+    { location: L.latLng(37.459056, 128.143972), imageUrl: './image/kmla_047.jpg' },
+    { location: L.latLng(37.459028, 128.144167), imageUrl: './image/kmla_048.jpg' },
+    { location: L.latLng(37.459, 128.144333), imageUrl: './image/kmla_049.jpg' },
+
+    { location: L.latLng(37.460028, 128.141139), imageUrl: './image/kmla_395.jpg' },
+    { location: L.latLng(37.459172, 128.144667), imageUrl: './image/kmla_500.jpg' },
+    ];
+
+    var currentIndex = null;
+    var viewer;
+
+    // 독립적인 마커들을 위한 이미지 파일 배열
+    const specialImages = ['kmla_004.jpg', 'kmla_395.jpg', 'kmla_500.jpg'];
+
+    // 이미지 데이터 반복 처리
+    imageData.forEach(function(data, index) {
+      const isSpecial = specialImages.includes(data.imageUrl.split('/').pop());
+      
+      // 마커 스타일을 이미지가 특별한지 여부에 따라 설정
+      const marker = L.circleMarker(data.location, {
+        radius: isSpecial ? 7 : 4,  // 특별한 이미지일 경우 더 작지만 일반 점보다는 크게 표시
+        color: isSpecial ? 'yellow' : '#FF4500', // 경계선 색상
+        fillColor: isSpecial ? 'blue' : '#FFA07A', // 내부 색상
+        fillOpacity: 0.8,
+        weight: isSpecial ? 2 : 2
+      }).addTo(map);
+
+      // 툴팁 및 이벤트 추가
+      marker.bindTooltip(data.imageUrl.split('/').pop(), {
+        permanent: false,
+        direction: 'top'
+      });
+
+      marker.on('mouseover', function() {
+        map.getContainer().style.cursor = 'pointer';
+      });
+
+      marker.on('mouseout', function() {
+        map.getContainer().style.cursor = 'crosshair';
+      });
+
+      marker.on('click', function() {
+        currentIndex = index;
+        showPanorama(data.location);
+      });
+    });
+
+    function showPanorama(latlng) {
+      var imageUrl = getImageUrlByLocation(latlng);
+      if (!imageUrl) {
+        alert('해당 위치의 파노라마 이미지를 찾을 수 없습니다.');
+        return;
+      }
+
+      document.getElementById('panorama').style.display = 'block';
+      document.getElementById('map').style.display = 'none';
+      document.getElementById('backButton').style.display = 'block';
+      document.getElementById('imageTitle').style.display = 'block';
+
+      // 선택된 이미지가 특별한 이미지인 경우 화살표 숨기기
+      const imageName = imageUrl.split('/').pop();
+      const isSpecial = specialImages.includes(imageName);
+      document.getElementById('upArrow').style.display = isSpecial ? 'none' : 'flex';
+      document.getElementById('downArrow').style.display = isSpecial ? 'none' : 'flex';
+
+      document.getElementById('imageTitle').innerText = imageName;
+
+      viewer = pannellum.viewer('panorama', {
+        type: 'equirectangular',
+        panorama: imageUrl,
+        autoLoad: true,
+        compass: true,
+      });
+    }
+
+    function showMap() {
+      document.getElementById('panorama').style.display = 'none';
+      document.getElementById('map').style.display = 'block';
+      document.getElementById('backButton').style.display = 'none';
+      document.getElementById('imageTitle').style.display = 'none';
+
+      document.getElementById('upArrow').style.display = 'none';
+      document.getElementById('downArrow').style.display = 'none';
+    }
+
+    function navigateToNext() {
+      if (currentIndex < imageData.length - 1) {
+        currentIndex++;
+        showPanorama(imageData[currentIndex].location);
+      }
+    }
+
+    function navigateToPrevious() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        showPanorama(imageData[currentIndex].location);
+      }
+    }
+
+    function getImageUrlByLocation(latlng) {
+      var nearest = null;
+      var minDistance = Infinity;
+
+      imageData.forEach(function(data) {
+        var distance = latlng.distanceTo(data.location);
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearest = data;
+        }
+      });
+
+      return nearest ? nearest.imageUrl : null;
+    }
+  </script>
+</body>
+</html>
